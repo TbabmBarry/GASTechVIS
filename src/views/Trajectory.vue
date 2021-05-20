@@ -44,7 +44,7 @@
 
 <script>
 import * as d3 from "d3";
-// import background from "../assets/MC2-tourist.jpg";
+// import axios from "axios";
 
 export default {
     name: "trajectory",
@@ -58,6 +58,8 @@ export default {
     },
     mounted() {
         this.generateChart();
+        // axios.get("http://localhost:5000/init_gps")
+        //     .then(res => (this.car_paths = res.data));
     },
     methods: {
         generateChart() {
@@ -75,17 +77,17 @@ export default {
             const y1 = svgHeight - padding * 2;
 
             Promise.all([
-                d3.json("http://localhost:8000/Abila.geojson"),
-                d3.json("http://localhost:8000/gps_car_1_path_6.geojson")
+                d3.json("http://localhost:5000/fetch_map"),
+                d3.json("http://localhost:5000/fetch_gps?id=30&time_start=14-01-7 07:00&time_end=14-1-7 17:00")
             ])
             .then(([abila, car_paths]) => {
                 console.log(abila);
+                console.log(car_paths);
                 let projection = d3.geoMercator().fitExtent(
                     [
                         [x0, y0], //left upper coordinate
                         [x1, y1], //right lower coordinate
                     ], abila);
-                console.log(projection);
 
                 let pathGenerator = d3.geoPath().projection(projection);
 
@@ -106,7 +108,6 @@ export default {
                     .attr("d", pathGenerator(car_paths))
                     .style("fill", "none")
                     .style("stroke", "orange");
-                
             })
 
             const zoom = d3.zoom()
