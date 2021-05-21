@@ -17,12 +17,6 @@
                             </v-list-item-title>
                             <v-list-item-subtitle>Select one specific car id to check its trajectory</v-list-item-subtitle>
                         </v-list-item-content>
-
-                        <v-list-item-avatar
-                            tile
-                            size="80"
-                            color="grey"
-                        ></v-list-item-avatar>
                         </v-list-item>
                     <v-card-actions>
                         <v-select
@@ -33,6 +27,25 @@
                     </v-card-actions>
                 </v-card>
             </v-col>
+            <v-row
+                justify="space-around"
+                align="center"
+                >
+                <v-col style="width: 350px; flex: 0 1 auto;">
+                    <h2>Start:</h2>
+                    <v-time-picker
+                    v-model="start"
+                    :max="end_time"
+                    ></v-time-picker>
+                </v-col>
+                <v-col style="width: 350px; flex: 0 1 auto;">
+                    <h2>End:</h2>
+                    <v-time-picker
+                    v-model="end"
+                    :min="start_time"
+                    ></v-time-picker>
+                </v-col>
+                </v-row>
             <v-col
                 cols="8"
             >
