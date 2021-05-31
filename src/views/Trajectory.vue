@@ -3,54 +3,8 @@
         <v-container
             fill-height
         >
-            <v-col
-                cols="4"
-            >
-                <v-card>
-                    <v-list-item three-line>
-                        <v-list-item-content>
-                            <div class="overline mb-4">
-                            LEGEND
-                            </div>
-                            <v-list-item-title class="headline mb-1">
-                            Car ID
-                            </v-list-item-title>
-                            <v-list-item-subtitle>Select one specific car id to check its trajectory</v-list-item-subtitle>
-                        </v-list-item-content>
-                        </v-list-item>
-                    <v-card-actions>
-                        <v-select
-                        :items="car_id"
-                        filled
-                        label="Select"
-                        ></v-select>
-                    </v-card-actions>
-                </v-card>
-            </v-col>
-            <v-row
-                justify="space-around"
-                align="center"
-                >
-                <v-col style="width: 350px; flex: 0 1 auto;">
-                    <h2>Start:</h2>
-                    <v-time-picker
-                    v-model="start"
-                    :max="end_time"
-                    ></v-time-picker>
-                </v-col>
-                <v-col style="width: 350px; flex: 0 1 auto;">
-                    <h2>End:</h2>
-                    <v-time-picker
-                    v-model="end"
-                    :min="start_time"
-                    ></v-time-picker>
-                </v-col>
-                </v-row>
-            <v-col
-                cols="8"
-            >
-                <svg class="chart"></svg>
-            </v-col>
+        <img src="../assets/tourist.png" :width="svgWidth" :height="svgHeight" />
+        <svg class="chart"></svg>
         </v-container>
   </v-app>
 </template>
@@ -58,11 +12,14 @@
 <script>
 import * as d3 from "d3";
 // import axios from "axios";
+// import topojson from "topojson";
 
 export default {
     name: "trajectory",
     data() {
         return {
+            svgWidth: 2710 / 4,
+            svgHeight: 1598 / 4,
             mapContainer: null,
             abila: null,
             car_paths: null,
@@ -71,23 +28,13 @@ export default {
     },
     mounted() {
         this.generateChart();
-        // axios.get("http://localhost:5000/init_gps")
-        //     .then(res => (this.car_paths = res.data));
     },
     methods: {
         generateChart() {
-            const svgWidth = 900;
-            const svgHeight = 600;
-            const padding = 30;
 
             this.mapContainer = d3.select(".chart")
-                .attr("height", svgHeight)
-                .attr("width", svgWidth);
-
-            const x0 = padding;
-            const y0 = padding;
-            const x1 = svgWidth - padding * 2;
-            const y1 = svgHeight - padding * 2;
+                .attr("height", this.svgHeight)
+                .attr("width", this.svgWidth);
 
             Promise.all([
                 d3.json("http://localhost:5000/fetch_map"),
@@ -95,32 +42,23 @@ export default {
             ])
             .then(([abila, car_paths]) => {
                 console.log(abila);
-                console.log(car_paths);
-                let projection = d3.geoMercator().fitExtent(
-                    [
-                        [x0, y0], //left upper coordinate
-                        [x1, y1], //right lower coordinate
-                    ], abila);
-
+                var projection = d3.geoIdentity().reflectY(true).fitSize([this.svgWidth,this.svgHeight], abila);
+                var path = d3.geoPath(projection);
                 let pathGenerator = d3.geoPath().projection(projection);
 
-                // this.mapContainer.append("svg:image")
-                //     .attr("xlink:href", require('../assets/MC2-tourist.jpg'))
-                //     .attr("width", svgWidth)
-                //     .attr("height", svgHeight)
-                //     .attr("x", 0)
-                //     .attr("y", 0);
                 this.mapContainer.selectAll("path")
-                    .data(abila.features) //data binding
-                    .join("path")
-                    .attr("d", pathGenerator) //draw path
-                    .attr("stroke-width", 0.5)
-                    .attr("stroke", "#000000")
-                    .attr("fill", "#ffffff");
+                    .data(abila.features)
+                    .enter()
+                    .append("path")
+                    .attr("d",path)
+                    .style("fill","none")
+                    .style("stroke-width",1)
+                    .style("stroke","#cc6600");
                 this.mapContainer.append("path")
                     .attr("d", pathGenerator(car_paths))
                     .style("fill", "none")
-                    .style("stroke", "orange");
+                    .style("stroke-width",2)
+                    .style("stroke", "steelblue");
             })
 
             const zoom = d3.zoom()
@@ -136,5 +74,11 @@ export default {
 </script>
 
 <style>
-
+svg, img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+}
 </style>
