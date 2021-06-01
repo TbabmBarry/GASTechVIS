@@ -31,42 +31,93 @@ export default {
               position: "top"
             },
             animation: true,
-            grid: {
-              top: "5%"
+            grid: [{
+              top: "5%",
+              right: "55%"
             },
-            xAxis: {
+            {
+              top: "5%",
+              left: "55%"
+            }],
+            xAxis: [{
+              type: 'category',
+              data: this.hours,
+              splitArea: {
+                  show: true
+              },
+              gridIndex: 0
+            },
+            {
               type: 'category',
               data: this.days,
               splitArea: {
                   show: true
-              }
+              },
+              gridIndex: 1
+            }],
+            yAxis: [{
+              type: 'category',
+              data: data.data.cc[1],
+              splitArea: {
+                  show: true
+              },
+              gridIndex: 0
             },
-            yAxis: {
+            {
               type: 'category',
               data: data.data.loyalty[1],
               splitArea: {
                   show: true
-              }
-            },
-            visualMap: {
-                  min: 0,
-                  max: 100,
-                  calculable: true,
-                  orient: 'horizontal',
-                  left: '91%',
-                  bottom: '30%'
               },
+              gridIndex: 1
+            }],
+            visualMap: [{
+                  min: 0,
+                  max: data.data.cc[2],
+                  calculable: true,
+                  orient: 'vertical',
+                  right: '52%',
+                  bottom: '10%',
+                  seriesIndex: 0
+              },
+              {
+                  min: 0,
+                  max: data.data.loyalty[2],
+                  calculable: true,
+                  orient: 'vertical',
+                  left: '93%',
+                  bottom: '10%',
+                  seriesIndex: 1
+              }],
               series: [{
-                  type: 'heatmap',
-                  data: data.data.loyalty[0],
-                  label: {
-                      show: true
-                  },
-                  emphasis: {
-                      itemStyle: {
-                          shadowColor: 'rgba(0, 0, 0, 0.5)'
-                      }
-                  }
+                name: 'credit card',
+                type: 'heatmap',
+                data: data.data.cc[0],
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                label: {
+                    show: true
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+              },
+              {
+                name: 'loyalty',
+                type: 'heatmap',
+                data: data.data.loyalty[0],
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                label: {
+                    show: true
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowColor: '#171716'
+                    }
+                }
               }]
           }
         })
