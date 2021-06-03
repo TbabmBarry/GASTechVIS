@@ -35,6 +35,7 @@
 <script>
 import * as d3 from "d3";
 import axios from "axios";
+import * as d3Chromatic from 'd3-scale-chromatic';
 
 export default {
     name: "trajectory",
@@ -97,11 +98,25 @@ export default {
                 }
             })
             .then(car_paths => {
-                this.mapContainer.append("path")
-                    .attr("d", this.pathGenerator(car_paths.data))
-                    .style("fill", "none")
-                    .style("stroke-width",2)
-                    .style("stroke", "steelblue");
+                d3.select("#id").remove();
+                let pathGenerator = d3.geoPath().projection(this.projection);
+                let color = d3.scaleSequential(d3Chromatic.interpolateTurbo);
+                let num = car_paths.data.features.length;
+                this.mapContainer
+                    .selectAll()
+                    .data(car_paths.data.features)
+                    .enter()
+                    .append("path")
+                    .attr("d", function(d) {
+                        return pathGenerator(d.geometry);
+                    })
+                    .attr("fill", "none")
+                    .attr("id", "id")
+                    .style("stroke-width",4)
+                    .style("stroke", function(d) {
+                        console.log(color(d.properties.path_id/num));
+                        return color(d.properties.path_id/num);
+                    });
             })
         },
         drawHeatmap() {
