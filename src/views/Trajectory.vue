@@ -1,49 +1,53 @@
 <template>
-    <v-app>
-        <v-container
-            fill-height
-        >
-            <v-row
-                class="mb-16"
-                no-gutters
-            >
-                <v-col
-                    cols="6"
-                    sm="4"
-                    md="6"
-                >
-                <div class="range-slider">
-                    <vue-range-slider v-model="value" :min="min" :max="max" :enable-cross="enableCross"></vue-range-slider>
-                </div>
-                    <img src="../assets/tourist.png" :width="svgWidth" :height="svgHeight" />
-                    <svg class="map"></svg>
-                </v-col>
-                <v-col
-                    cols="6"
-                    sm="4"
-                    md="6"
-                >
-                    <v-chart class="chart" :option="heatmap" />
-                </v-col>
-            </v-row>
-        </v-container>
-  </v-app>
+    <el-container>
+        <el-col :span="12">
+            <div class="grid-content bg-purple">
+                <el-row>
+                    <div class="range-slider">
+                        <el-date-picker
+                        v-model="time_range"
+                        type="datetimerange"
+                        value-format="yy-M-d HH:mm"
+                        range-separator="To"
+                        start-placeholder="Start date"
+                        end-placeholder="End date"
+                        @input="chooseTimeRange">
+                        </el-date-picker>
+                    </div>
+                </el-row>
+                <el-row>
+                    <div class="route-map">
+                        <img src="../assets/tourist.png" :width="svgWidth" :height="svgHeight" />
+                        <svg class="map"></svg>
+                    </div>
+                </el-row>
+            </div>
+        </el-col>
+            
+        <el-col :span="12">
+            <div class="grid-content bg-purple">
+                <v-chart class="chart" :option="heatmap" />
+            </div>
+        </el-col>
+  </el-container>
 </template>
 
 <script>
 import * as d3 from "d3";
 import axios from "axios";
-import 'vue-range-component/dist/vue-range-slider.css';
-import VueRangeSlider from 'vue-range-component';
 
 export default {
     name: "trajectory",
     data() {
         return {
-            value: [0,100],
-            svgWidth: 2710 / 4,
-            svgHeight: 1598 / 4,
+            time_range: [new Date(2014, 0, 6, 0, 0), new Date(2014, 0, 19, 23, 59)],
+            start_time: null,
+            end_time: null,
+            svgWidth: 2710 / 3,
+            svgHeight: 1598 / 3,
             mapContainer: null,
+            projection: null,
+            pathGenerator: null,
             heatmap: {},
             hours: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00',
                     '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
@@ -54,56 +58,51 @@ export default {
             car_id: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 101, 104, 105, 106, 107]
         }
     },
-    components: {
-        VueRangeSlider
-    },
     mounted() {
-        this.generateChart();
+        this.generateBackground();
         this.drawHeatmap();
     },
     created() {
-        this.min = 0
-        this.max = 250
-        this.enableCross = false
+        
     },
     methods: {
-        generateChart() {
+        generateBackground() {
             this.mapContainer = d3.select(".map")
                 .attr("height", this.svgHeight)
                 .attr("width", this.svgWidth);
 
-            Promise.all([
-                d3.json("http://localhost:5000/fetch_map"),
-                d3.json("http://localhost:5000/fetch_gps?id=30&time_start=14-01-7 07:00&time_end=14-1-7 17:00")
-            ])
-            .then(([abila, car_paths]) => {
+            axios.get("http://localhost:5000/fetch_map")
+            .then(abila => {
                 // console.log(abila);
-                var projection = d3.geoIdentity().reflectY(true).fitSize([this.svgWidth,this.svgHeight], abila);
-                var path = d3.geoPath(projection);
-                let pathGenerator = d3.geoPath().projection(projection);
+                this.projection = d3.geoIdentity().reflectY(true).fitSize([this.svgWidth,this.svgHeight], abila.data);
+                var path = d3.geoPath(this.projection);
+                this.pathGenerator = d3.geoPath().projection(this.projection);
 
                 this.mapContainer.selectAll("path")
-                    .data(abila.features)
+                    .data(abila.data.features)
                     .enter()
                     .append("path")
                     .attr("d",path)
                     .style("fill","none")
                     .style("stroke-width",1)
                     .style("stroke","#cc6600");
+            });
+        },
+        drawPaths() {
+            axios.get("http://localhost:5000/fetch_gps", {
+                params: {
+                    id: 19,
+                    time_start: this.start_time,
+                    time_end: this.end_time
+                }
+            })
+            .then(car_paths => {
                 this.mapContainer.append("path")
-                    .attr("d", pathGenerator(car_paths))
+                    .attr("d", this.pathGenerator(car_paths.data))
                     .style("fill", "none")
                     .style("stroke-width",2)
                     .style("stroke", "steelblue");
             })
-
-            const zoom = d3.zoom()
-                .on('zoom', (event) => {
-                    this.mapContainer.attr('transform', event.transform);
-                })
-                .scaleExtent([1, 40]);
-            this.mapContainer.call(zoom).append('g');
-
         },
         drawHeatmap() {
             axios
@@ -161,6 +160,20 @@ export default {
                 }]
             }
             })
+      },
+      chooseTimeRange(e) {
+        this.$nextTick(() => {
+            if(e==null){
+                this.start_time='';
+                this.end_time='';
+            }else{
+                this.$set(this,"time_range", [e[0], e[1]]);
+                this.start_time=this.time_range[0];
+                this.end_time=this.time_range[1];
+                this.drawPaths();                  
+            }
+
+        });
       }
     }
 }
@@ -169,20 +182,23 @@ export default {
 <style>
 svg, img {
   position: absolute;
-  top: 50;
-  left: 20;
-  margin: 0;
-  padding: 0;
 }
+
+.el-main {
+background-color: #E9EEF3;
+color: #333;
+text-align: center;
+line-height: 160px;
+}
+
 .range-slider {
-  padding:40px 15px;
+    margin: 10px;
+}
+
+.route-map {
+    margin: 10px;
 }
 .chart {
     position: absolute;
-    top: 0;
-    right: 20;
-    margin: 0;
-    padding: 0;
-    height: 500;
   }
 </style>
