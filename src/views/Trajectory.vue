@@ -49,6 +49,7 @@
 <script>
 import * as d3 from "d3";
 import axios from "axios";
+import moment from "moment";
 import * as d3Chromatic from "d3-scale-chromatic";
 
 export default {
@@ -168,8 +169,11 @@ export default {
       //     this.time_range[0].getTime() / 1000,
       //     this.time_range[1] / 1000,
       //   ];
-      let range = [1990, 2016];
-      let w = 400;
+      let range = [
+        Math.round(new Date(2014, 0, 6, 0, 0).getTime()/60000),
+        Math.round(new Date(2014, 0, 6, 1, 0).getTime()/60000)
+      ];
+      let w = 900;
       let h = 300;
       let margin = {
         top: 130,
@@ -186,7 +190,7 @@ export default {
         .scaleLinear()
         .domain(range) // data space
         .range([0, width]); // display space
-      let svg = d3.select(".brush");
+      let svg = d3.select(".brush").attr("height", h).attr("width", w);
       const g = svg
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
@@ -226,8 +230,20 @@ export default {
         .on("brush", function (event) {
           var s = event.selection;
           // update and move labels
-          labelL.attr("x", s[0]).text(Math.round(x.invert(s[0])));
-          labelR.attr("x", s[1]).text(Math.round(x.invert(s[1])) - 1);
+          labelL
+            .attr("x", s[0])
+            .text(
+              moment
+                .unix(Math.round(x.invert(s[0]))*60)
+                .format("DD-MM-YYYY HH:mm:ss")
+            );
+          labelR
+            .attr("x", s[1])
+            .text(
+              moment
+                .unix((Math.round(x.invert(s[1])) - 1)*60)
+                .format("DD-MM-YYYY HH:mm:ss")
+            );
           // move brush handles
           handle.attr("display", null).attr("transform", function (d, i) {
             return "translate(" + [s[i], -height / 4] + ")";
@@ -235,7 +251,11 @@ export default {
           // update view
           // if the view should only be updated after brushing is over,
           // move these two lines into the on('end') part below
-          svg.node().value = s.map((d) => Math.round(x.invert(d)));
+          svg.node().value = s.map((d) =>
+            moment
+              .unix(Math.round(x.invert(d))*60)
+              .format("DD-MM-YYYY HH:mm:ss")
+          );
           svg.node().dispatchEvent(new CustomEvent("input"));
         })
         .on("end", function (event) {
@@ -427,6 +447,7 @@ export default {
 }
 
 .time-brush {
+  left: 40px;
   top: 550px;
   position: absolute;
 }
