@@ -1,219 +1,460 @@
 <template>
-    <el-container>
-        <el-col :span="12">
-            <div class="grid-content bg-purple">
-                <el-row>
-                    <div class="range-slider">
-                        <el-date-picker
-                        v-model="time_range"
-                        type="datetimerange"
-                        value-format="yy-M-d HH:mm"
-                        range-separator="To"
-                        start-placeholder="Start date"
-                        end-placeholder="End date"
-                        @input="chooseTimeRange">
-                        </el-date-picker>
-                    </div>
-                </el-row>
-                <el-row>
-                    <div class="route-map">
-                        <img src="../assets/tourist.png" :width="svgWidth" :height="svgHeight" />
-                        <svg class="map"></svg>
-                    </div>
-                </el-row>
+  <el-container>
+    <el-col :span="12">
+      <div class="grid-content bg-purple">
+        <el-row :gutter="20">
+          <div class="range-slider">
+            <el-date-picker
+              v-model="time_range"
+              type="datetimerange"
+              value-format="yy-M-d HH:mm"
+              range-separator="To"
+              start-placeholder="Start date"
+              end-placeholder="End date"
+              @input="chooseTimeRange"
+            >
+            </el-date-picker>
+          </div>
+        </el-row>
+        <el-row>
+          <div class="route-map">
+            <div class="png-background">
+              <img
+                src="../assets/tourist.png"
+                :width="svgWidth"
+                :height="svgHeight"
+              />
             </div>
-        </el-col>
-            
-        <el-col :span="12">
-            <div class="grid-content bg-purple">
-                <v-chart class="chart" :option="heatmap" />
+            <div class="svg-layer">
+              <svg class="map"></svg>
             </div>
-        </el-col>
+          </div>
+        </el-row>
+        <el-row>
+          <div class="time-brush">
+            <svg class="brush"></svg>
+          </div>
+        </el-row>
+      </div>
+    </el-col>
+
+    <el-col :span="12">
+      <div class="grid-content bg-purple">
+        <v-chart class="chart" :option="heatmap" />
+      </div>
+    </el-col>
   </el-container>
 </template>
 
 <script>
 import * as d3 from "d3";
 import axios from "axios";
-import * as d3Chromatic from 'd3-scale-chromatic';
+import * as d3Chromatic from "d3-scale-chromatic";
 
 export default {
-    name: "trajectory",
-    data() {
-        return {
-            time_range: [new Date(2014, 0, 6, 0, 0), new Date(2014, 0, 19, 23, 59)],
-            start_time: null,
-            end_time: null,
-            svgWidth: 2710 / 3,
-            svgHeight: 1598 / 3,
-            mapContainer: null,
-            projection: null,
-            pathGenerator: null,
-            heatmap: {},
-            hours: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00',
-                    '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-                    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00',
-                    '21:00', '22:00', '23:00'],
-            abila: null,
-            car_paths: null,
-            car_id: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 101, 104, 105, 106, 107]
-        }
-    },
-    mounted() {
-        this.generateBackground();
-        this.drawHeatmap();
-    },
-    created() {
-        
-    },
-    methods: {
-        generateBackground() {
-            this.mapContainer = d3.select(".map")
-                .attr("height", this.svgHeight)
-                .attr("width", this.svgWidth);
+  name: "trajectory",
+  data() {
+    return {
+      time_range: [new Date(2014, 0, 6, 0, 0), new Date(2014, 0, 19, 23, 59)],
+      start_time: null,
+      end_time: null,
+      svgWidth: 2710 / 3,
+      svgHeight: 1598 / 3,
+      mapContainer: null,
+      projection: null,
+      pathGenerator: null,
+      heatmap: {},
+      hours: [
+        "00:00",
+        "01:00",
+        "02:00",
+        "03:00",
+        "04:00",
+        "05:00",
+        "06:00",
+        "07:00",
+        "08:00",
+        "09:00",
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00",
+        "19:00",
+        "20:00",
+        "21:00",
+        "22:00",
+        "23:00",
+      ],
+      abila: null,
+      car_paths: null,
+      car_id: [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 101, 104,
+        105, 106, 107,
+      ],
+    };
+  },
+  mounted() {
+    this.generateBackground();
+    this.drawHeatmap();
+    this.sliderSnap();
+  },
+  created() {},
+  methods: {
+    generateBackground() {
+      this.mapContainer = d3
+        .select(".map")
+        .attr("height", this.svgHeight)
+        .attr("width", this.svgWidth);
 
-            axios.get("http://localhost:5000/fetch_map")
-            .then(abila => {
-                // console.log(abila);
-                this.projection = d3.geoIdentity().reflectY(true).fitSize([this.svgWidth,this.svgHeight], abila.data);
-                var path = d3.geoPath(this.projection);
-                this.pathGenerator = d3.geoPath().projection(this.projection);
+      axios.get("http://localhost:5000/fetch_map").then((abila) => {
+        // console.log(abila);
+        this.projection = d3
+          .geoIdentity()
+          .reflectY(true)
+          .fitSize([this.svgWidth, this.svgHeight], abila.data);
+        var path = d3.geoPath(this.projection);
+        this.pathGenerator = d3.geoPath().projection(this.projection);
 
-                this.mapContainer.selectAll("path")
-                    .data(abila.data.features)
-                    .enter()
-                    .append("path")
-                    .attr("d",path)
-                    .style("fill","none")
-                    .style("stroke-width",1)
-                    .style("stroke","#cc6600");
+        this.mapContainer
+          .selectAll("path")
+          .data(abila.data.features)
+          .enter()
+          .append("path")
+          .attr("d", path)
+          .style("fill", "none")
+          .style("stroke-width", 1)
+          .style("stroke", "#cc6600");
+      });
+    },
+    drawPaths() {
+      axios
+        .get("http://localhost:5000/fetch_gps", {
+          params: {
+            id: 19,
+            time_start: this.start_time,
+            time_end: this.end_time,
+          },
+        })
+        .then((car_paths) => {
+          d3.select("#id").remove();
+          let pathGenerator = d3.geoPath().projection(this.projection);
+          let color = d3.scaleSequential(d3Chromatic.interpolateTurbo);
+          let num = car_paths.data.features.length;
+          this.mapContainer
+            .selectAll()
+            .data(car_paths.data.features)
+            .enter()
+            .append("path")
+            .attr("d", function (d) {
+              return pathGenerator(d.geometry);
+            })
+            .attr("fill", "none")
+            .attr("id", "id")
+            .style("stroke-width", 4)
+            .style("stroke", function (d) {
+              console.log(color(d.properties.path_id / num));
+              return color(d.properties.path_id / num);
             });
-        },
-        drawPaths() {
-            axios.get("http://localhost:5000/fetch_gps", {
-                params: {
-                    id: 19,
-                    time_start: this.start_time,
-                    time_end: this.end_time
-                }
-            })
-            .then(car_paths => {
-                d3.select("#id").remove();
-                let pathGenerator = d3.geoPath().projection(this.projection);
-                let color = d3.scaleSequential(d3Chromatic.interpolateTurbo);
-                let num = car_paths.data.features.length;
-                this.mapContainer
-                    .selectAll()
-                    .data(car_paths.data.features)
-                    .enter()
-                    .append("path")
-                    .attr("d", function(d) {
-                        return pathGenerator(d.geometry);
-                    })
-                    .attr("fill", "none")
-                    .attr("id", "id")
-                    .style("stroke-width",4)
-                    .style("stroke", function(d) {
-                        console.log(color(d.properties.path_id/num));
-                        return color(d.properties.path_id/num);
-                    });
-            })
-        },
-        drawHeatmap() {
-            axios
-            .get("http://localhost:5000/fetch_heatmap")
-            .then(data => {
-            console.log(data);
-            this.heatmap = {
-                tooltip: {
-                    position: "top"
-                },
-                animation: true,
-                grid: [{
-                top: "5%",
-                right: "55%",
-                }],
-                xAxis: [{
-                    type: 'category',
-                    data: this.hours,
-                    splitArea: {
-                        show: true
-                    },
-                    gridIndex: 0
-                }],
-                yAxis: [{
-                    type: 'category',
-                    data: data.data.cc[1],
-                    splitArea: {
-                        show: true
-                    },
-                    gridIndex: 0
-                }],
-                visualMap: [{
-                    min: 0,
-                    max: data.data.cc[2],
-                    calculable: true,
-                    orient: 'vertical',
-                    right: '52%',
-                    bottom: '10%',
-                    seriesIndex: 0
-                }],
-                series: [{
-                    name: 'credit card',
-                    type: 'heatmap',
-                    data: data.data.cc[0],
-                    xAxisIndex: 0,
-                    yAxisIndex: 0,
-                    label: {
-                        show: true
-                    },
-                    emphasis: {
-                        itemStyle: {
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
-                    }
-                }]
-            }
-            })
-      },
-      chooseTimeRange(e) {
-        this.$nextTick(() => {
-            if(e==null){
-                this.start_time='';
-                this.end_time='';
-            }else{
-                this.$set(this,"time_range", [e[0], e[1]]);
-                this.start_time=this.time_range[0];
-                this.end_time=this.time_range[1];
-                this.drawPaths();                  
-            }
-
         });
+    },
+    sliderSnap() {
+      //   let range = [
+      //     this.time_range[0].getTime() / 1000,
+      //     this.time_range[1] / 1000,
+      //   ];
+      let range = [1990, 2016];
+      let w = 400;
+      let h = 300;
+      let margin = {
+        top: 130,
+        bottom: 135,
+        left: 40,
+        right: 40,
+      };
+      // dimensions of slider bar
+      var width = w - margin.left - margin.right;
+      var height = h - margin.top - margin.bottom;
+
+      // create x scale
+      var x = d3
+        .scaleLinear()
+        .domain(range) // data space
+        .range([0, width]); // display space
+      let svg = d3.select(".brush");
+      const g = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+      // draw background lines
+      g.append("g")
+        .selectAll("line")
+        .data(d3.range(range[0], range[1] + 1))
+        .enter()
+        .append("line")
+        .attr("x1", (d) => x(d))
+        .attr("x2", (d) => x(d))
+        .attr("y1", 0)
+        .attr("y2", height)
+        .style("stroke", "#ccc");
+      // labels
+      let labelL = g
+        .append("text")
+        .attr("id", "labelleft")
+        .attr("x", 0)
+        .attr("y", height + 5)
+        .text(range[0]);
+
+      let labelR = g
+        .append("text")
+        .attr("id", "labelright")
+        .attr("x", 0)
+        .attr("y", height + 5)
+        .text(range[1]);
+
+      // define brush
+      let brush = d3
+        .brushX()
+        .extent([
+          [0, 0],
+          [width, height],
+        ])
+        .on("brush", function (event) {
+          var s = event.selection;
+          // update and move labels
+          labelL.attr("x", s[0]).text(Math.round(x.invert(s[0])));
+          labelR.attr("x", s[1]).text(Math.round(x.invert(s[1])) - 1);
+          // move brush handles
+          handle.attr("display", null).attr("transform", function (d, i) {
+            return "translate(" + [s[i], -height / 4] + ")";
+          });
+          // update view
+          // if the view should only be updated after brushing is over,
+          // move these two lines into the on('end') part below
+          svg.node().value = s.map((d) => Math.round(x.invert(d)));
+          svg.node().dispatchEvent(new CustomEvent("input"));
+        })
+        .on("end", function (event) {
+          if (!event.sourceEvent) return;
+          var d0 = event.selection.map(x.invert);
+          var d1 = d0.map(Math.round);
+          d3.select(this).transition().call(event.target.move, d1.map(x));
+        });
+
+      // append brush to g
+      var gBrush = g.append("g").attr("class", "brush").call(brush);
+
+      // add brush handles (from https://bl.ocks.org/Fil/2d43867ba1f36a05459c7113c7f6f98a)
+      var brushResizePath = function (d) {
+        var e = +(d.type == "e"),
+          x = e ? 1 : -1,
+          y = height / 2;
+        return (
+          "M" +
+          0.5 * x +
+          "," +
+          y +
+          "A6,6 0 0 " +
+          e +
+          " " +
+          6.5 * x +
+          "," +
+          (y + 6) +
+          "V" +
+          (2 * y - 6) +
+          "A6,6 0 0 " +
+          e +
+          " " +
+          0.5 * x +
+          "," +
+          2 * y +
+          "Z" +
+          "M" +
+          2.5 * x +
+          "," +
+          (y + 8) +
+          "V" +
+          (2 * y - 8) +
+          "M" +
+          4.5 * x +
+          "," +
+          (y + 8) +
+          "V" +
+          (2 * y - 8)
+        );
+      };
+
+      var handle = gBrush
+        .selectAll(".handle--custom")
+        .data([{ type: "w" }, { type: "e" }])
+        .enter()
+        .append("path")
+        .attr("class", "handle--custom")
+        .attr("stroke", "#000")
+        .attr("fill", "#eee")
+        .attr("cursor", "ew-resize")
+        .attr("d", brushResizePath);
+
+      // override default behaviour - clicking outside of the selected area
+      // will select a small piece there rather than deselecting everything
+      // https://bl.ocks.org/mbostock/6498000
+      gBrush
+        .selectAll(".overlay")
+        .each(function (d) {
+          d.type = "selection";
+        })
+        .on("mousedown touchstart", brushcentered);
+
+      function brushcentered() {
+        var dx = x(1) - x(0), // Use a fixed width when recentering.
+          cx = d3.pointer(this)[0],
+          x0 = cx - dx / 2,
+          x1 = cx + dx / 2;
+        d3.select(this.parentNode).call(
+          brush.move,
+          x1 > width ? [width - dx, width] : x0 < 0 ? [0, dx] : [x0, x1]
+        );
       }
-    }
-}
+
+      // select entire range
+      gBrush.call(brush.move, range.map(x));
+    },
+    drawHeatmap() {
+      axios.get("http://localhost:5000/fetch_heatmap").then((data) => {
+        console.log(data);
+        this.heatmap = {
+          tooltip: {
+            position: "top",
+          },
+          animation: true,
+          grid: [
+            {
+              top: "5%",
+              right: "55%",
+            },
+          ],
+          xAxis: [
+            {
+              type: "category",
+              data: this.hours,
+              splitArea: {
+                show: true,
+              },
+              gridIndex: 0,
+            },
+          ],
+          yAxis: [
+            {
+              type: "category",
+              data: data.data.cc[1],
+              splitArea: {
+                show: true,
+              },
+              gridIndex: 0,
+            },
+          ],
+          visualMap: [
+            {
+              min: 0,
+              max: data.data.cc[2],
+              calculable: true,
+              orient: "vertical",
+              right: "52%",
+              bottom: "10%",
+              seriesIndex: 0,
+            },
+          ],
+          series: [
+            {
+              name: "credit card",
+              type: "heatmap",
+              data: data.data.cc[0],
+              xAxisIndex: 0,
+              yAxisIndex: 0,
+              label: {
+                show: true,
+              },
+              emphasis: {
+                itemStyle: {
+                  shadowColor: "rgba(0, 0, 0, 0.5)",
+                },
+              },
+            },
+          ],
+        };
+      });
+    },
+    chooseTimeRange(e) {
+      this.$nextTick(() => {
+        if (e == null) {
+          this.start_time = "";
+          this.end_time = "";
+        } else {
+          this.$set(this, "time_range", [e[0], e[1]]);
+          this.start_time = this.time_range[0];
+          this.end_time = this.time_range[1];
+          this.drawPaths();
+        }
+      });
+    },
+  },
+};
 </script>
 
 <style>
-svg, img {
+.png-background,
+.svg-layer {
   position: absolute;
 }
 
 .el-main {
-background-color: #E9EEF3;
-color: #333;
-text-align: center;
-line-height: 160px;
+  background-color: #e9eef3;
+  color: #333;
+  text-align: center;
+  line-height: 160px;
 }
 
 .range-slider {
-    margin: 10px;
+  margin: 10px;
 }
 
 .route-map {
-    margin: 10px;
+  margin: 10px;
+}
+
+.time-brush {
+  top: 550px;
+  position: absolute;
+}
+
+rect.overlay {
+  stroke: black;
+}
+
+rect.selection {
+  stroke: none;
+  fill: steelblue;
+  fill-opacity: 0.6;
+}
+
+#labelleft,
+#labelright {
+  dominant-baseline: hanging;
+  font-size: 12px;
+}
+
+#labelleft {
+  text-anchor: end;
+}
+
+#labelright {
+  text-anchor: start;
 }
 .chart {
-    position: absolute;
-  }
+  position: absolute;
+}
 </style>
