@@ -1,48 +1,36 @@
 <template>
   <el-container>
-    <el-col :span="12">
-      <div class="grid-content bg-purple">
-        <el-row :gutter="20">
-          <div class="range-slider">
-            <el-date-picker
-              v-model="time_range"
-              type="datetimerange"
-              value-format="yy-M-d HH:mm"
-              range-separator="To"
-              start-placeholder="Start date"
-              end-placeholder="End date"
-              @input="chooseTimeRange"
-            >
-            </el-date-picker>
-          </div>
-        </el-row>
-        <el-row>
-          <div class="route-map">
-            <div class="png-background">
-              <img
-                src="../assets/tourist.png"
-                :width="svgWidth"
-                :height="svgHeight"
-              />
-            </div>
-            <div class="svg-layer">
-              <svg class="map"></svg>
-            </div>
-          </div>
-        </el-row>
-        <el-row>
-          <div class="time-brush">
-            <svg class="brush"></svg>
-          </div>
-        </el-row>
-      </div>
-    </el-col>
-
-    <el-col :span="12">
-      <div class="grid-content bg-purple">
-        <v-chart class="chart" :option="heatmap" />
-      </div>
-    </el-col>
+    <!-- <el-row>
+      <el-date-picker
+        v-model="time_range"
+        type="datetimerange"
+        value-format="yy-M-d HH:mm"
+        range-separator="To"
+        start-placeholder="Start date"
+        end-placeholder="End date"
+        @input="chooseTimeRange"
+      >
+      </el-date-picker>
+    </el-row> -->
+    <el-row>
+      <el-col :span="24">
+        <div class="png-background">
+          <img
+            src="../assets/tourist.png"
+            :width="svgWidth"
+            :height="svgHeight"
+          />
+        </div>
+        <div class="svg-layer">
+          <svg class="map"></svg>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col :span="24" class="time-brush">
+        <svg class="brush"></svg>
+      </el-col>
+    </el-row>
   </el-container>
 </template>
 
@@ -65,32 +53,6 @@ export default {
       projection: null,
       pathGenerator: null,
       heatmap: {},
-      hours: [
-        "00:00",
-        "01:00",
-        "02:00",
-        "03:00",
-        "04:00",
-        "05:00",
-        "06:00",
-        "07:00",
-        "08:00",
-        "09:00",
-        "10:00",
-        "11:00",
-        "12:00",
-        "13:00",
-        "14:00",
-        "15:00",
-        "16:00",
-        "17:00",
-        "18:00",
-        "19:00",
-        "20:00",
-        "21:00",
-        "22:00",
-        "23:00",
-      ],
       abila: null,
       car_paths: null,
       car_id: [
@@ -102,7 +64,6 @@ export default {
   },
   mounted() {
     this.generateBackground();
-    this.drawHeatmap();
     this.sliderSnap();
   },
   created() {},
@@ -165,28 +126,24 @@ export default {
         });
     },
     sliderSnap() {
-      //   let range = [
-      //     this.time_range[0].getTime() / 1000,
-      //     this.time_range[1] / 1000,
-      //   ];
       let range = [
-        Math.round(new Date(2014, 0, 6, 0, 0).getTime()/60000),
-        Math.round(new Date(2014, 0, 6, 1, 0).getTime()/60000)
+        Math.round(new Date(2014, 0, 6, 0, 0).getTime() / 60000),
+        Math.round(new Date(2014, 0, 6, 23, 59).getTime() / 60000),
       ];
-      let w = 900;
+      let w = 1800;
       let h = 300;
       let margin = {
         top: 130,
         bottom: 135,
-        left: 40,
-        right: 40,
+        left: 80,
+        right: 80,
       };
       // dimensions of slider bar
-      var width = w - margin.left - margin.right;
-      var height = h - margin.top - margin.bottom;
+      let width = w - margin.left - margin.right;
+      let height = h - margin.top - margin.bottom;
 
       // create x scale
-      var x = d3
+      let x = d3
         .scaleLinear()
         .domain(range) // data space
         .range([0, width]); // display space
@@ -221,6 +178,7 @@ export default {
         .text(range[1]);
 
       // define brush
+      let vm = this;
       let brush = d3
         .brushX()
         .extent([
@@ -234,15 +192,15 @@ export default {
             .attr("x", s[0])
             .text(
               moment
-                .unix(Math.round(x.invert(s[0]))*60)
-                .format("DD-MM-YYYY HH:mm:ss")
+                .unix(Math.round(x.invert(s[0])) * 60)
+                .format("MM-DD HH:mm:ss")
             );
           labelR
             .attr("x", s[1])
             .text(
               moment
-                .unix((Math.round(x.invert(s[1])) - 1)*60)
-                .format("DD-MM-YYYY HH:mm:ss")
+                .unix((Math.round(x.invert(s[1])) - 1) * 60)
+                .format("MM-DD HH:mm:ss")
             );
           // move brush handles
           handle.attr("display", null).attr("transform", function (d, i) {
@@ -251,17 +209,18 @@ export default {
           // update view
           // if the view should only be updated after brushing is over,
           // move these two lines into the on('end') part below
-          svg.node().value = s.map((d) =>
-            moment
-              .unix(Math.round(x.invert(d))*60)
-              .format("DD-MM-YYYY HH:mm:ss")
-          );
+          svg.node().value = s.map((d) => Math.round(x.invert(d)));
           svg.node().dispatchEvent(new CustomEvent("input"));
         })
         .on("end", function (event) {
           if (!event.sourceEvent) return;
           var d0 = event.selection.map(x.invert);
           var d1 = d0.map(Math.round);
+          let query = [
+            moment.unix(d1[0] * 60).format("YY-M-D HH:mm"),
+            moment.unix(d1[1] * 60).format("YY-M-D HH:mm"),
+          ];
+          vm.chooseTimeRange(query);
           d3.select(this).transition().call(event.target.move, d1.map(x));
         });
 
@@ -343,71 +302,6 @@ export default {
       // select entire range
       gBrush.call(brush.move, range.map(x));
     },
-    drawHeatmap() {
-      axios.get("http://localhost:5000/fetch_heatmap").then((data) => {
-        console.log(data);
-        this.heatmap = {
-          tooltip: {
-            position: "top",
-          },
-          animation: true,
-          grid: [
-            {
-              top: "5%",
-              right: "55%",
-            },
-          ],
-          xAxis: [
-            {
-              type: "category",
-              data: this.hours,
-              splitArea: {
-                show: true,
-              },
-              gridIndex: 0,
-            },
-          ],
-          yAxis: [
-            {
-              type: "category",
-              data: data.data.cc[1],
-              splitArea: {
-                show: true,
-              },
-              gridIndex: 0,
-            },
-          ],
-          visualMap: [
-            {
-              min: 0,
-              max: data.data.cc[2],
-              calculable: true,
-              orient: "vertical",
-              right: "52%",
-              bottom: "10%",
-              seriesIndex: 0,
-            },
-          ],
-          series: [
-            {
-              name: "credit card",
-              type: "heatmap",
-              data: data.data.cc[0],
-              xAxisIndex: 0,
-              yAxisIndex: 0,
-              label: {
-                show: true,
-              },
-              emphasis: {
-                itemStyle: {
-                  shadowColor: "rgba(0, 0, 0, 0.5)",
-                },
-              },
-            },
-          ],
-        };
-      });
-    },
     chooseTimeRange(e) {
       this.$nextTick(() => {
         if (e == null) {
@@ -431,23 +325,12 @@ export default {
   position: absolute;
 }
 
-.el-main {
-  background-color: #e9eef3;
-  color: #333;
-  text-align: center;
-  line-height: 160px;
-}
-
-.range-slider {
-  margin: 10px;
-}
-
 .route-map {
   margin: 10px;
 }
 
 .time-brush {
-  left: 40px;
+  margin: 10px;
   top: 550px;
   position: absolute;
 }
