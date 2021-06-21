@@ -1,6 +1,54 @@
 <template>
-  <el-container>
-    <!-- <el-row>
+  <div class="container">
+    <el-row :gutter="20">
+      <el-col :span="8" style="height: 100%">
+        <el-table
+          :data="tableData"
+          ref="multipleTable"
+          height="550"
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" width="45"> </el-table-column>
+          <el-table-column prop="LastName" label="LastName" width="90">
+          </el-table-column>
+          <el-table-column prop="FirstName" label="FirstName" width="90">
+          </el-table-column>
+          <el-table-column prop="CarID" label="CarID" width="90">
+          </el-table-column>
+          <el-table-column
+            prop="CurrentEmploymentType"
+            label="CurrentEmploymentType"
+            width="120"
+          ></el-table-column>
+          <el-table-column
+            prop="CurrentEmploymentTitle"
+            label="CurrentEmploymentTitle"
+            width="120"
+          ></el-table-column>
+        </el-table>
+        <div style="margin-top: 20px">
+          <el-button @click="toggleSelection()">Cancel Selection</el-button>
+        </div>
+      </el-col>
+      <el-col :span="16" style="height: 100%">
+        <img
+          src="../assets/tourist.png"
+          :width="svgWidth"
+          :height="svgHeight"
+        />
+        <svg class="map"></svg>
+      </el-col>
+    </el-row>
+    <el-row :gutter="20">
+      <el-col :span="24">
+        <div class="time-brush">
+          <svg class="brush"></svg>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
+  <!-- <el-row>
       <el-date-picker
         v-model="time_range"
         type="datetimerange"
@@ -12,26 +60,6 @@
       >
       </el-date-picker>
     </el-row> -->
-    <el-row>
-      <el-col :span="24">
-        <div class="png-background">
-          <img
-            src="../assets/tourist.png"
-            :width="svgWidth"
-            :height="svgHeight"
-          />
-        </div>
-        <div class="svg-layer">
-          <svg class="map"></svg>
-        </div>
-      </el-col>
-    </el-row>
-    <el-row>
-      <el-col :span="24" class="time-brush">
-        <svg class="brush"></svg>
-      </el-col>
-    </el-row>
-  </el-container>
 </template>
 
 <script>
@@ -52,13 +80,255 @@ export default {
       mapContainer: null,
       projection: null,
       pathGenerator: null,
-      heatmap: {},
+      multipleSelection: [],
       abila: null,
       car_paths: null,
-      car_id: [
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 101, 104,
-        105, 106, 107,
+      tableData: [
+        {
+          LastName: "Calixto",
+          FirstName: "Nils",
+          CarID: 1,
+          CurrentEmploymentType: "Information Technology",
+          CurrentEmploymentTitle: "IT Helpdesk",
+        },
+        {
+          LastName: "Azada",
+          FirstName: "Lars",
+          CarID: 2,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Engineer",
+        },
+        {
+          LastName: "Balas",
+          FirstName: "Felix",
+          CarID: 3,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Engineer",
+        },
+        {
+          LastName: "Barranco",
+          FirstName: "Ingrid",
+          CarID: 4,
+          CurrentEmploymentType: "Executive",
+          CurrentEmploymentTitle: "SVP/CFO",
+        },
+        {
+          LastName: "Baza",
+          FirstName: "Isak",
+          CarID: 5,
+          CurrentEmploymentType: "Information Technology",
+          CurrentEmploymentTitle: "IT Technician",
+        },
+        {
+          LastName: "Bergen",
+          FirstName: "Linnea",
+          CarID: 6,
+          CurrentEmploymentType: "Information Technology",
+          CurrentEmploymentTitle: "IT Group Manager",
+        },
+        {
+          LastName: "Orilla",
+          FirstName: "Elsa",
+          CarID: 7,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Drill Technician",
+        },
+        {
+          LastName: "Alcazar",
+          FirstName: "Lucas",
+          CarID: 8,
+          CurrentEmploymentType: "Information Technology",
+          CurrentEmploymentTitle: "IT Technician",
+        },
+        {
+          LastName: "Cazar",
+          FirstName: "Gustav",
+          CarID: 9,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Drill Technician",
+        },
+        {
+          LastName: "Campo-Corrente",
+          FirstName: "Ada",
+          CarID: 10,
+          CurrentEmploymentType: "Executive",
+          CurrentEmploymentTitle: "SVP/CIO",
+        },
+        {
+          LastName: "Calzas",
+          FirstName: "Axel",
+          CarID: 11,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Hydraulic Technician",
+        },
+        {
+          LastName: "Cocinaro",
+          FirstName: "Hideki",
+          CarID: 12,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Site Control",
+        },
+        {
+          LastName: "Ferro",
+          FirstName: "Inga",
+          CarID: 13,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Site Control",
+        },
+        {
+          LastName: "Dedos",
+          FirstName: "Lidelse",
+          CarID: 14,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Engineering Group Manager",
+        },
+        {
+          LastName: "Bodrogi",
+          FirstName: "Loreto",
+          CarID: 15,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Site Control",
+        },
+        {
+          LastName: "Vann",
+          FirstName: "Isia",
+          CarID: 16,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Perimeter Control",
+        },
+        {
+          LastName: "Flecha",
+          FirstName: "Sven",
+          CarID: 17,
+          CurrentEmploymentType: "Information Technology",
+          CurrentEmploymentTitle: "IT Technician",
+        },
+        {
+          LastName: "Frente",
+          FirstName: "Birgitta",
+          CarID: 18,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Geologist",
+        },
+        {
+          LastName: "Frente",
+          FirstName: "Vira",
+          CarID: 19,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Hydraulic Technician",
+        },
+        {
+          LastName: "Fusil",
+          FirstName: "Stenig",
+          CarID: 20,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Building Control",
+        },
+        {
+          LastName: "Osvaldo",
+          FirstName: "Hennie",
+          CarID: 21,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Perimeter Control",
+        },
+        {
+          LastName: "Nubarron",
+          FirstName: "Adra",
+          CarID: 22,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Badging Office",
+        },
+        {
+          LastName: "Lagos",
+          FirstName: "Varja",
+          CarID: 23,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Badging Office",
+        },
+        {
+          LastName: "Mies",
+          FirstName: "Minke",
+          CarID: 24,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Perimeter Control",
+        },
+        {
+          LastName: "Herrero",
+          FirstName: "Kanon",
+          CarID: 25,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Geologist",
+        },
+        {
+          LastName: "Onda",
+          FirstName: "Marin",
+          CarID: 26,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Drill Site Manager",
+        },
+        {
+          LastName: "Orilla",
+          FirstName: "Kare",
+          CarID: 27,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Drill Technician",
+        },
+        {
+          LastName: "Borrasca",
+          FirstName: "Isande",
+          CarID: 28,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Drill Technician",
+        },
+        {
+          LastName: "Ovan",
+          FirstName: "Bertrand",
+          CarID: 29,
+          CurrentEmploymentType: "Facilities",
+          CurrentEmploymentTitle: "Facilities Group Manager",
+        },
+        {
+          LastName: "Resumir",
+          FirstName: "Felix",
+          CarID: 30,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Security Group Manager",
+        },
+        {
+          LastName: "Sanjorge Jr.",
+          FirstName: "Sten",
+          CarID: 31,
+          CurrentEmploymentType: "Executive",
+          CurrentEmploymentTitle: "President/CEO",
+        },
+        {
+          LastName: "Strum",
+          FirstName: "Orhan",
+          CarID: 32,
+          CurrentEmploymentType: "Executive",
+          CurrentEmploymentTitle: "SVP/COO",
+        },
+        {
+          LastName: "Tempestad",
+          FirstName: "Brand",
+          CarID: 33,
+          CurrentEmploymentType: "Engineering",
+          CurrentEmploymentTitle: "Drill Technician",
+        },
+        {
+          LastName: "Vann",
+          FirstName: "Edvard",
+          CarID: 34,
+          CurrentEmploymentType: "Security",
+          CurrentEmploymentTitle: "Perimeter Control",
+        },
+        {
+          LastName: "Vasco-Pais",
+          FirstName: "Willem",
+          CarID: 35,
+          CurrentEmploymentType: "Executive",
+          CurrentEmploymentTitle: "Environmental Safety Advisor",
+        },
       ],
     };
   },
@@ -315,24 +585,44 @@ export default {
         }
       });
     },
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+    },
+    toggleSelection() {
+      this.$refs.multipleTable.clearSelection();
+    },
   },
 };
 </script>
 
 <style>
-.png-background,
-.svg-layer {
+html,
+body {
+  margin: 0px;
+}
+.container {
   position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
 }
 
-.route-map {
+.el-row {
   margin: 10px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+svg,
+img {
+  position: absolute;
 }
 
 .time-brush {
   margin: 10px;
-  top: 550px;
-  position: absolute;
+  /* top: 250px; */
+  position: relative;
 }
 
 rect.overlay {
