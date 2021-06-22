@@ -368,7 +368,7 @@ export default {
       axios
         .get("http://localhost:5000/fetch_gps", {
           params: {
-            id: 19,
+            id: this.multipleSelection[0].CarID,
             time_start: this.start_time,
             time_end: this.end_time,
           },
@@ -390,7 +390,6 @@ export default {
             .attr("id", "id")
             .style("stroke-width", 4)
             .style("stroke", function (d) {
-              console.log(color(d.properties.path_id / num));
               return color(d.properties.path_id / num);
             });
         });
@@ -581,12 +580,14 @@ export default {
           this.$set(this, "time_range", [e[0], e[1]]);
           this.start_time = this.time_range[0];
           this.end_time = this.time_range[1];
+          if (this.multipleSelection.length == 0) return;
           this.drawPaths();
         }
       });
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
+      if (this.start_time && this.end_time) this.drawPaths();
     },
     toggleSelection() {
       this.$refs.multipleTable.clearSelection();
