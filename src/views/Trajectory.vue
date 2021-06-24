@@ -387,10 +387,18 @@ export default {
               return pathGenerator(d.geometry);
             })
             .attr("fill", "none")
-            .attr("id", "id")
+            .attr("id", function (d) {
+              return d.properties.path_id;
+            })
             .style("stroke-width", 4)
             .style("stroke", function (d) {
               return color(d.properties.path_id / num);
+            })
+            .on("mouseover", function () {
+              d3.select(this).style("stroke-width", 6);
+            })
+            .on("mouseout", function () {
+              d3.select(this).style("stroke-width", 4);
             });
         });
     },
