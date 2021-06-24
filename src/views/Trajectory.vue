@@ -29,6 +29,7 @@
         </el-table>
         <div style="margin-top: 20px">
           <el-button @click="toggleSelection()">Cancel Selection</el-button>
+          <el-button @click="renderPaths()">Query</el-button>
         </div>
       </el-col>
       <el-col :span="16" style="height: 100%">
@@ -63,11 +64,16 @@
 </template>
 
 <script>
-import * as d3 from "d3";
+import * as d3module from "d3";
 import axios from "axios";
 import moment from "moment";
 import * as d3Chromatic from "d3-scale-chromatic";
+import { tip as d3tip } from "d3-v6-tip";
 
+const d3 = {
+  ...d3module,
+  tip: d3tip,
+};
 export default {
   name: "trajectory",
   data() {
@@ -364,11 +370,11 @@ export default {
           .style("stroke", "#cc6600");
       });
     },
-    drawPaths() {
+    drawPaths(car_ids) {
       axios
         .get("http://localhost:5000/fetch_gps", {
           params: {
-            id: this.multipleSelection[0].CarID,
+            id: car_ids,
             time_start: this.start_time,
             time_end: this.end_time,
           },
@@ -377,10 +383,27 @@ export default {
           d3.select("#id").remove();
           let pathGenerator = d3.geoPath().projection(this.projection);
           let color = d3.scaleSequential(d3Chromatic.interpolateTurbo);
-          let num = car_paths.data.features.length;
+          console.log(car_paths);
+          let tip = d3
+            .tip()
+            .attr("class", "d3-tip")
+            .html(function (d) {
+              return (
+                "<div style = 'background-color:black; opacity:0.8; color: #fff;border-radius: 2px; " +
+                "line-height: 1;font-weight: bold; padding: 12px;' > " +
+                "<span style='color:violet'>" +
+                d.properties.car_id +
+                "</span><br>TimeStamp:<span style='color:pink'>" +
+                d.properties.time[0] +
+                " " +
+                d.properties.time[1] +
+                "</div>"
+              );
+            });
+          this.mapContainer.call(tip);
           this.mapContainer
             .selectAll()
-            .data(car_paths.data.features)
+            .data(car_paths.data[2][0].features)
             .enter()
             .append("path")
             .attr("d", function (d) {
@@ -392,13 +415,17 @@ export default {
             })
             .style("stroke-width", 4)
             .style("stroke", function (d) {
-              return color(d.properties.path_id / num);
+              return color(d.properties.car_id);
             })
-            .on("mouseover", function () {
+            .on("mouseover", function (event, d) {
+              console.log(event);
               d3.select(this).style("stroke-width", 6);
+              tip.show(d);
             })
-            .on("mouseout", function () {
+            .on("mouseout", function (event, d) {
+              console.log(event);
               d3.select(this).style("stroke-width", 4);
+              tip.hide(d);
             });
         });
     },
@@ -589,16 +616,22 @@ export default {
           this.start_time = this.time_range[0];
           this.end_time = this.time_range[1];
           if (this.multipleSelection.length == 0) return;
-          this.drawPaths();
+          // this.drawPaths();
         }
       });
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
-      if (this.start_time && this.end_time) this.drawPaths();
+      console.log(val);
+      // if (this.start_time && this.end_time) this.drawPaths();
     },
     toggleSelection() {
       this.$refs.multipleTable.clearSelection();
+    },
+    renderPaths() {
+      let car_ids = this.multipleSelection.map((data) => data.CarID).join(",");
+      console.log(car_ids);
+      this.drawPaths(car_ids);
     },
   },
 };
@@ -659,5 +692,63 @@ rect.selection {
 }
 .chart {
   position: absolute;
+}
+
+.d3-tip {
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.4;
+  padding: 20px;
+  pointer-events: none !important;
+  color: #203d5d;
+  box-shadow: 0 4px 20px 4px rgba(0, 20, 60, 0.1),
+    0 4px 80px -8px rgba(0, 20, 60, 0.2);
+  background-color: #fff;
+  border-radius: 4px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: #fff;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Northward tooltips */
+.d3-tip.n:after {
+  content: "▼";
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+  text-align: center;
+}
+
+/* Eastward tooltips */
+.d3-tip.e:after {
+  content: "◀";
+  margin: -4px 0 0 0;
+  top: 50%;
+  left: -8px;
+}
+
+/* Southward tooltips */
+.d3-tip.s:after {
+  content: "▲";
+  margin: 0 0 1px 0;
+  top: -8px;
+  left: 0;
+  text-align: center;
+}
+
+/* Westward tooltips */
+.d3-tip.w:after {
+  content: "▶";
+  margin: -4px 0 0 -1px;
+  top: 50%;
+  left: 100%;
 }
 </style>
