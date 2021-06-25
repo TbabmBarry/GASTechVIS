@@ -64,16 +64,17 @@
 </template>
 
 <script>
-import * as d3module from "d3";
+import * as d3 from "d3";
 import axios from "axios";
 import moment from "moment";
 import * as d3Chromatic from "d3-scale-chromatic";
-import { tip as d3tip } from "d3-v6-tip";
+import d3Tip from "d3-tip";
+// import { tip as d3tip } from "d3-v6-tip";
 
-const d3 = {
-  ...d3module,
-  tip: d3tip,
-};
+// const d3 = {
+//   ...d3module,
+//   tip: d3tip,
+// };
 export default {
   name: "trajectory",
   data() {
@@ -384,9 +385,9 @@ export default {
           let pathGenerator = d3.geoPath().projection(this.projection);
           let color = d3.scaleSequential(d3Chromatic.interpolateTurbo);
           console.log(car_paths);
-          let tip = d3
-            .tip()
+          let tip = d3Tip()
             .attr("class", "d3-tip")
+            .offset([-10, 0])
             .html(function (d) {
               return (
                 "<div style = 'background-color:black; opacity:0.8; color: #fff;border-radius: 2px; " +
@@ -420,12 +421,12 @@ export default {
             .on("mouseover", function (event, d) {
               console.log(event);
               d3.select(this).style("stroke-width", 6);
-              tip.show(d);
+              tip.show(d, this);
             })
             .on("mouseout", function (event, d) {
               console.log(event);
               d3.select(this).style("stroke-width", 4);
-              tip.hide(d);
+              tip.hide(d, this);
             });
         });
     },
