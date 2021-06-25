@@ -384,10 +384,8 @@ export default {
           d3.select("#id").remove();
           let pathGenerator = d3.geoPath().projection(this.projection);
           let color = d3.scaleSequential(d3Chromatic.interpolateTurbo);
-          console.log(car_paths);
           let tip = d3Tip()
             .attr("class", "d3-tip")
-            .offset([-10, 0])
             .html(function (d) {
               return (
                 "<div style = 'background-color:black; opacity:0.8; color: #fff;border-radius: 2px; " +
@@ -402,32 +400,63 @@ export default {
               );
             });
           this.mapContainer.call(tip);
-          this.mapContainer
-            .selectAll()
-            .data(car_paths.data[2][0].features)
-            .enter()
-            .append("path")
-            .attr("d", function (d) {
-              return pathGenerator(d.geometry);
-            })
-            .attr("fill", "none")
-            .attr("id", function (d) {
-              return d.properties.path_id;
-            })
-            .style("stroke-width", 4)
-            .style("stroke", function (d) {
-              return color(d.properties.car_id);
-            })
-            .on("mouseover", function (event, d) {
-              console.log(event);
-              d3.select(this).style("stroke-width", 6);
-              tip.show(d, this);
-            })
-            .on("mouseout", function (event, d) {
-              console.log(event);
-              d3.select(this).style("stroke-width", 4);
-              tip.hide(d, this);
-            });
+          for (const [id, paths] of Object.entries(car_paths.data)) {
+            console.log(id, paths);
+            // let num_path = paths[0].features.length;
+            this.mapContainer
+              .selectAll()
+              .data(paths[0].features)
+              .enter()
+              .append("path")
+              .attr("d", function (d) {
+                return pathGenerator(d.geometry);
+              })
+              .attr("fill", "none")
+              .attr("id", function (d) {
+                return d.properties.path_id;
+              })
+              .style("stroke-width", 4)
+              .style("stroke", function () {
+                let normalized_id = (id - 1) / (35 - 1);
+                return color(normalized_id);
+              })
+              .on("mouseover", function (event, d) {
+                // console.log(event);
+                d3.select(this).style("stroke-width", 6);
+                tip.show(d, this);
+              })
+              .on("mouseout", function (event, d) {
+                // console.log(event);
+                d3.select(this).style("stroke-width", 4);
+                tip.hide(d, this);
+              });
+          }
+          // this.mapContainer
+          //   .selectAll()
+          //   .data(car_paths.data[2][0].features)
+          //   .enter()
+          //   .append("path")
+          //   .attr("d", function (d) {
+          //     return pathGenerator(d.geometry);
+          //   })
+          //   .attr("fill", "none")
+          //   .attr("id", function (d) {
+          //     return d.properties.path_id;
+          //   })
+          //   .style("stroke-width", 4)
+          //   .style("stroke", function (d) {
+          //     return color(d.properties.car_id);
+          //   })
+          //   .on("mouseover", function (event, d) {
+          //     console.log(event);
+          //     d3.select(this).style("stroke-width", 6);
+          //     tip.show(d, this);
+          //   })
+          //   .on("mouseout", function (event, d) {
+          //     console.log(event);
+          //     d3.select(this).style("stroke-width", 4);
+          //     tip.hide(d, this);
+          //   });
         });
     },
     sliderSnap() {
