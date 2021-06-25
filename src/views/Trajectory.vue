@@ -384,14 +384,23 @@ export default {
           d3.select("#id").remove();
           let pathGenerator = d3.geoPath().projection(this.projection);
           let color = d3.scaleSequential(d3Chromatic.interpolateTurbo);
+          let vm = this;
           let tip = d3Tip()
             .attr("class", "d3-tip")
             .html(function (d) {
+              for (let i = 0; i < vm.tableData.length; i++) {
+                if (vm.tableData[i]["CarID"] == d.properties.car_id) {
+                  var lastname = vm.tableData[i]["LastName"];
+                  var firstname = vm.tableData[i]["FirstName"];
+                }
+              }
               return (
                 "<div style = 'background-color:black; opacity:0.8; color: #fff;border-radius: 2px; " +
                 "line-height: 1;font-weight: bold; padding: 12px;' > " +
                 "<span style='color:violet'>" +
-                d.properties.car_id +
+                firstname +
+                " " +
+                lastname +
                 "</span><br>TimeStamp:<span style='color:pink'>" +
                 d.properties.time[0] +
                 " " +
@@ -431,32 +440,6 @@ export default {
                 tip.hide(d, this);
               });
           }
-          // this.mapContainer
-          //   .selectAll()
-          //   .data(car_paths.data[2][0].features)
-          //   .enter()
-          //   .append("path")
-          //   .attr("d", function (d) {
-          //     return pathGenerator(d.geometry);
-          //   })
-          //   .attr("fill", "none")
-          //   .attr("id", function (d) {
-          //     return d.properties.path_id;
-          //   })
-          //   .style("stroke-width", 4)
-          //   .style("stroke", function (d) {
-          //     return color(d.properties.car_id);
-          //   })
-          //   .on("mouseover", function (event, d) {
-          //     console.log(event);
-          //     d3.select(this).style("stroke-width", 6);
-          //     tip.show(d, this);
-          //   })
-          //   .on("mouseout", function (event, d) {
-          //     console.log(event);
-          //     d3.select(this).style("stroke-width", 4);
-          //     tip.hide(d, this);
-          //   });
         });
     },
     sliderSnap() {
