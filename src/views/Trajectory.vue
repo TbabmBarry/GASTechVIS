@@ -387,6 +387,7 @@ export default {
           let vm = this;
           let tip = d3Tip()
             .attr("class", "d3-tip")
+            .offset([-70, 0])
             .html(function (d) {
               for (let i = 0; i < vm.tableData.length; i++) {
                 if (vm.tableData[i]["CarID"] == d.properties.car_id) {
