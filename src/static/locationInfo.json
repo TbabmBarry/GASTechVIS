@@ -1,0 +1,99 @@
+{"data": [
+    {
+      "LocationID": 1,
+      "LocationName": "Alberts Fine Clothing",
+      "Coords": [24.85757,36.07668],
+      "Type": "General"
+    },
+    {
+      "LocationID": 2,
+      "LocationName": "Bean There Done That",
+      "Coords": [24.85093,36.0818],
+      "Type": "Eat"
+    },
+    {
+      "LocationID": 3,
+      "LocationName": "Brew've Been Served",
+      "Coords": [24.90249,36.05579],
+      "Type": "Eat"
+    },
+    {
+      "LocationID": 4,
+      "LocationName": "Chameleon Coffee",
+      "Coords": [24.88981,36.05463],
+      "Type": "Eat"
+    },
+    {
+      "LocationID": 5,
+      "LocationName": "Cup O' Joe",
+      "Coords": [24.87958,36.05027],
+      "Type": "Eat"
+    },
+    {
+      "LocationID": 6,
+      "LocationName": "Frydo's Autosupply N' More",
+      "Coords": [24.86591,36.07683],
+      "Type": "General"
+    },
+    {
+      "LocationID": 7,
+      "LocationName": "GasTech",
+      "Coords": [24.87957,36.04802],
+      "Type": "Work"
+    },
+    {
+      "LocationID": 8,
+      "LocationName": "General Grocer",
+      "Coords": [24.85806,36.05971],
+      "Type": "General"
+    },
+    {
+      "LocationID": 9,
+      "LocationName": "Guy's Gyros",
+      "Coords": [24.89884,36.06246],
+      "Type": "General"
+    },
+    {
+      "LocationID": 10,
+      "LocationName": "Hallowed Grounds",
+      "Coords": [24.88593,36.06365],
+      "Type": "General"
+    },
+    {
+      "LocationID": 11,
+      "LocationName": "Jack's Magic Beans",
+      "Coords": [24.87335,36.06751],
+      "Type": "Eat"
+    },
+    {
+      "LocationID": 12,
+      "LocationName": "Katerina's Cafe",
+      "Coords": [24.89996,36.05452],
+      "Type": "Eat"
+    },
+    {
+      "LocationID": 13,
+      "LocationName": "Kronos Mart",
+      "Coords": [24.85237,36.06583],
+      "Type": "General"
+    },
+    {
+      "LocationID": 14,
+      "LocationName": "Ouzeri Elian",
+      "Coords": [24.87078,36.05196],
+      "Type": "Eat"
+    },
+    {
+      "LocationID": 15,
+      "LocationName": "Roberts and Sons",
+      "Coords": [24.87053,36.05666],
+      "Type": "Eat"
+    },
+    {
+      "LocationID": 16,
+      "LocationName": "U Pump",
+      "Coords": [24.87151,36.06775],
+      "Type": "General"
+    }
+   ]
+}
