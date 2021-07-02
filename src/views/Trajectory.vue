@@ -140,13 +140,12 @@ export default {
         })
         .then((car_paths) => {
           d3.select("#id").remove();
-          console.log(this.projection);
           let pathGenerator = d3.geoPath().projection(this.projection);
           let color = d3.scaleSequential(d3Chromatic.interpolateTurbo);
           let vm = this;
           let tip = d3Tip()
             .attr("class", "d3-tip")
-            .offset([-70, 0])
+            .offset([-20, 0])
             .html(function (d) {
               for (let i = 0; i < vm.tableData.length; i++) {
                 if (vm.tableData[i]["CarID"] == d.properties.car_id) {
@@ -170,15 +169,12 @@ export default {
             });
           this.mapContainer.call(tip);
           for (const [id, paths] of Object.entries(car_paths.data)) {
-            console.log(id, paths);
-            // let num_path = paths[0].features.length;
             this.mapContainer
               .selectAll()
               .data(paths[0].features)
               .enter()
               .append("path")
               .attr("d", function (d) {
-                console.log(d.geometry);
                 return pathGenerator(d.geometry);
               })
               .attr("fill", "none")
@@ -191,15 +187,32 @@ export default {
                 return color(normalized_id);
               })
               .on("mouseover", function (event, d) {
-                // console.log(event);
                 d3.select(this).style("stroke-width", 6);
                 tip.show(d, this);
               })
               .on("mouseout", function (event, d) {
-                // console.log(event);
                 d3.select(this).style("stroke-width", 4);
                 tip.hide(d, this);
               });
+            for (let i = 0; i < this.locationInfo.length; i++) {
+              var isDraw = false;
+              for (let j = 0; j < paths[0].features.length; j++) {
+                let curr = paths[0].features[j];
+                if (isDraw) break;
+                for (let k = 0; k < curr.geometry.coordinates.length; k++) {
+                  if (
+                    this.getDistanceFromLatLon(
+                      this.locationInfo[i].Coords,
+                      curr.geometry.coordinates[k]
+                    ) < 0.05
+                  ) {
+                    this.drawLocation(this.locationInfo[i].Coords);
+                    isDraw = true;
+                    break;
+                  }
+                }
+              }
+            }
           }
         });
     },
@@ -381,19 +394,52 @@ export default {
       gBrush.call(brush.move, range.map(x));
     },
     drawLocation(coords) {
-      console.log(coords);
-      // console.log(this.projection);
       let pathGenerator = d3.geoPath().projection(this.projection);
       let geoJsonPoint = {
         type: "Point",
-        coordinates: [24.87957, 36.04802],
+        coordinates: coords,
       };
+      let vm = this;
+      let tip = d3Tip()
+        .attr("class", "d3-tip")
+        .offset([-20, 0])
+        .html(function (d) {
+          for (let i = 0; i < vm.locationInfo.length; i++) {
+            if (vm.locationInfo[i]["Coords"] == d.coordinates) {
+              var location = vm.locationInfo[i]["LocationName"];
+              var type = vm.locationInfo[i]["Type"];
+            }
+          }
+          return (
+            "<div style = 'background-color:black; opacity:0.8; color: #fff;border-radius: 2px; " +
+            "line-height: 1;font-weight: bold; padding: 12px;' > " +
+            "<span style='color:violet'>" +
+            location +
+            "</span><br>Type: <span style='color:pink'>" +
+            type +
+            "</div>"
+          );
+        });
+      this.mapContainer.call(tip);
       this.mapContainer
+        .selectAll()
+        .data([geoJsonPoint])
+        .enter()
         .append("path")
-        .attr("d", pathGenerator(geoJsonPoint))
+        .attr("d", function (d) {
+          return pathGenerator(d);
+        })
         .attr("opacity", "0.5")
         .style("stroke", "red")
-        .style("stroke-width", 20);
+        .style("stroke-width", 20)
+        .on("mouseover", function (event, d) {
+          d3.select(this).style("stroke-width", 40);
+          tip.show(d, this);
+        })
+        .on("mouseout", function (event, d) {
+          d3.select(this).style("stroke-width", 20);
+          tip.hide(d, this);
+        });
     },
     chooseTimeRange(e) {
       this.$nextTick(() => {
@@ -405,23 +451,18 @@ export default {
           this.start_time = this.time_range[0];
           this.end_time = this.time_range[1];
           if (this.multipleSelection.length == 0) return;
-          // this.drawPaths();
         }
       });
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
-      console.log(val);
-      // if (this.start_time && this.end_time) this.drawPaths();
     },
     toggleSelection() {
       this.$refs.multipleTable.clearSelection();
     },
     renderPaths() {
       let car_ids = this.multipleSelection.map((data) => data.CarID).join(",");
-      console.log(car_ids);
       this.drawPaths(car_ids);
-      this.drawLocation(this.locationInfo[1].Coords);
     },
     getDistanceFromLatLon(coord1, coord2) {
       var p = 0.017453292519943295; // Math.PI / 180
