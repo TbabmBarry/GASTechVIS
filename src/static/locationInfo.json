@@ -32,7 +32,7 @@
     {
       "LocationID": 6,
       "LocationName": "Frydo's Autosupply N' More",
-      "Coords": [24.86591,36.07683],
+      "Coords": [24.905569,36.06043535],
       "Type": "General"
     },
     {
@@ -86,7 +86,7 @@
     {
       "LocationID": 15,
       "LocationName": "Roberts and Sons",
-      "Coords": [24.87053,36.05666],
+      "Coords": [24.85098404,36.0634518],
       "Type": "Eat"
     },
     {

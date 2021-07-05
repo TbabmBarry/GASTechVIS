@@ -98,11 +98,14 @@ export default {
   },
   computed: {},
   mounted() {
-    this.generateBackground();
-    this.sliderSnap();
+    this.initialize();
   },
   created() {},
   methods: {
+    initialize() {
+      this.generateBackground();
+      this.sliderSnap();
+    },
     generateBackground() {
       this.mapContainer = d3
         .select(".map")
@@ -430,7 +433,16 @@ export default {
           return pathGenerator(d);
         })
         .attr("opacity", "0.5")
-        .style("stroke", "red")
+        .style("stroke", function (d) {
+          for (let i = 0; i < vm.locationInfo.length; i++) {
+            if (vm.locationInfo[i]["Coords"] == d.coordinates) {
+              var type = vm.locationInfo[i]["Type"];
+            }
+          }
+          if (type == "Eat") return "red";
+          if (type == "General") return "#800080";
+          if (type == "Work") return "blue";
+        })
         .style("stroke-width", 20)
         .on("mouseover", function (event, d) {
           d3.select(this).style("stroke-width", 40);
@@ -459,9 +471,13 @@ export default {
     },
     toggleSelection() {
       this.$refs.multipleTable.clearSelection();
+      d3.selectAll("svg > *").remove();
+      this.initialize();
     },
     renderPaths() {
       let car_ids = this.multipleSelection.map((data) => data.CarID).join(",");
+      d3.selectAll("svg > *").remove();
+      this.initialize();
       this.drawPaths(car_ids);
     },
     getDistanceFromLatLon(coord1, coord2) {
